@@ -18,6 +18,7 @@
         "components-icons": "libs/components/icons",
         "components-layout": "libs/components/layout",
         "components-ui": "libs/components/ui",
+        "components-ui-e2e": "apps/components-ui-e2e",
         "datasource-commands": "libs/datasource/commands",
         "datasource-db-service": "libs/datasource/db-service",
         "datasource-feature-flags": "libs/datasource/feature-flags",

@@ -5,7 +5,6 @@ import React, {
     type InputHTMLAttributes,
 } from 'react';
 import { styled } from '../styled';
-
 export type InputProps = {
     startAdornment?: React.ReactNode;
     endAdornment?: React.ReactNode;
@@ -43,9 +42,10 @@ const StyledInputRoot = styled('div')<{ noBorder: boolean }>(
     ({ noBorder, theme }) => ({
         height: '32px',
         display: 'flex',
-        border: noBorder
-            ? 'none'
-            : `1px solid ${theme.affine.palette.borderColor}`,
+        border: '1px solid',
+        borderColor: noBorder
+            ? 'transparent'
+            : `${theme.affine.palette.borderColor}`,
         borderRadius: '10px',
         color: `${theme.affine.palette.secondaryText}`,
         padding: '0 12px',
@@ -53,7 +53,15 @@ const StyledInputRoot = styled('div')<{ noBorder: boolean }>(
         lineHeight: '1.5',
         transition: 'border .1s',
         '&:focus-within': {
-            borderColor: `${theme.affine.palette.primary}`,
+            borderColor: noBorder
+                ? 'transparent'
+                : `${theme.affine.palette.primary}`,
+        },
+        '&:focus-visible': {
+            outline: 'none',
+            borderColor: noBorder
+                ? 'transparent'
+                : `${theme.affine.palette.primary}`,
         },
     })
 );
@@ -67,6 +75,11 @@ const StyledInputElement = styled('input')(({ theme }) => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    border: 'none',
+    '&:focus-visible': {
+        border: 'none',
+        outline: 'none',
+    },
     '&::placeholder': {
         color: `${theme.affine.palette.borderColor}`,
     },

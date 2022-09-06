@@ -1,6 +1,7 @@
 export * from './block-pendant';
 export { useEditor } from './Contexts';
 export * from './editor';
+export * from './editor/clipboard/types';
 export * from './hooks';
 export * from './kanban';
 export * from './kanban/types';

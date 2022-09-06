@@ -9,11 +9,11 @@ import {
 } from '@toeverything/components/board-state';
 import { tools } from '@toeverything/components/board-tools';
 import { TDShapeType } from '@toeverything/components/board-types';
-import { RecastBlockProvider } from '@toeverything/components/editor-core';
 import {
-    ReturnEditorBlock,
-    services,
-} from '@toeverything/datasource/db-service';
+    OFFICE_CLIPBOARD_MIMETYPE,
+    RecastBlockProvider,
+} from '@toeverything/components/editor-core';
+import { services } from '@toeverything/datasource/db-service';
 import { AsyncBlock, BlockEditor } from '@toeverything/framework/virgo';
 import { useEffect, useState } from 'react';
 import { useShapes } from './hooks';
@@ -74,59 +74,92 @@ const AffineBoard = ({
                     set_app(app);
                 },
                 async onPaste(e, data) {
-                    if (!data) {
-                        return;
-                    }
-
-                    const { shapes } = data;
-                    let addShapes = await Promise.all(
-                        shapes.map(async (item: any) => {
-                            const {
-                                type,
-                                point,
-                                style,
-                                parentId,
-                                size,
-                                childIndex,
-                            } = item;
-                            let group: ReturnEditorBlock | AsyncBlock;
-                            if (type !== TDShapeType.Editor) {
-                                group = await services.api.editorBlock.create({
-                                    workspace,
-                                    type: 'shape',
-                                    parentId: parentId,
-                                });
-                            } else {
-                                group = await editor.copyBlock(
-                                    item.id,
-                                    parentId
+                    let pasteData = JSON.parse(
+                        e.clipboardData.getData(
+                            OFFICE_CLIPBOARD_MIMETYPE.DOCS_DOCUMENT_SLICE_CLIP_WRAPPED
+                        )
+                    ).data;
+                    console.log('pasteData: ', pasteData);
+                    let shapes = await Promise.all(
+                        pasteData.map(async (data: any) => {
+                            if (data?.properties?.shapeProps) {
+                                let shapeProps = JSON.parse(
+                                    data.properties.shapeProps.value
                                 );
+                                const newShape = TLDR.get_shape_util(
+                                    shapeProps.type
+                                ).create({
+                                    id: shapeProps.id,
+                                    rootBlockId: shapeProps.id,
+                                    affineId: shapeProps.id,
+                                    parentId: shapeProps,
+                                    childIndex: shapeProps.childIndex,
+                                    point: [
+                                        shapeProps.point[0] + 10,
+                                        shapeProps.point[1] + 10,
+                                    ],
+                                    style: shapeProps.style,
+                                    size: shapeProps.size,
+                                    workspace,
+                                });
+                                return newShape;
                             }
-
-                            const newShape = TLDR.get_shape_util(
-                                item.type
-                            ).create({
-                                id: group.id,
-                                rootBlockId: group.id,
-                                affineId: group.id,
-                                parentId: parentId,
-                                childIndex,
-                                point: [point[0] + 10, point[1] + 10],
-                                style,
-                                size,
-                                workspace,
-                            });
-                            return newShape;
                         })
                     );
-                    app.create(addShapes);
+                    console.log(shapes);
+                    // if (!data) {
+                    //     return;
+                    // }
+
+                    // const { shapes } = data;
+                    // let addShapes = await Promise.all(
+                    //     shapes.map(async (item: any) => {
+                    //         const {
+                    //             type,
+                    //             point,
+                    //             style,
+                    //             parentId,
+                    //             size,
+                    //             childIndex,
+                    //         } = item;
+                    //         let group: ReturnEditorBlock | AsyncBlock;
+                    //         if (type !== TDShapeType.Editor) {
+                    //             group = await services.api.editorBlock.create({
+                    //                 workspace,
+                    //                 type: 'shape',
+                    //                 parentId: parentId,
+                    //             });
+                    //         } else {
+                    //             group = await editor.copyBlock(
+                    //                 item.id,
+                    //                 parentId
+                    //             );
+                    //         }
+
+                    //         const newShape = TLDR.get_shape_util(
+                    //             item.type
+                    //         ).create({
+                    //             id: group.id,
+                    //             rootBlockId: group.id,
+                    //             affineId: group.id,
+                    //             parentId: parentId,
+                    //             childIndex,
+                    //             point: [point[0] + 10, point[1] + 10],
+                    //             style,
+                    //             size,
+                    //             workspace,
+                    //         });
+                    //         return newShape;
+                    //     })
+                    // );
+                    // app.create(addShapes);
                 },
                 async onCopy(e, groupIds) {
                     const clip =
                         await editor.clipboard.clipboardUtils.getClipDataOfBlocksById(
                             groupIds
                         );
-
+                    console.log(clip.getMimeType());
                     e.clipboardData?.setData(
                         clip.getMimeType(),
                         clip.getData()

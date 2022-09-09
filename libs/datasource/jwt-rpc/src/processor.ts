@@ -1,6 +1,5 @@
 import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
-import * as awarenessProtocol from 'y-protocols/awareness';
 import * as syncProtocol from 'y-protocols/sync';
 import * as Y from 'yjs';
 
@@ -26,29 +25,9 @@ export const readMessage = (
 
 export const registerUpdateHandler = (
     provider: WebsocketProvider,
-    awareness: awarenessProtocol.Awareness,
     doc: Y.Doc,
     broadcastMessage: (buf: ArrayBuffer) => void
 ) => {
-    const beforeUnloadHandler = () => {
-        awarenessProtocol.removeAwarenessStates(
-            awareness,
-            [doc.clientID],
-            'window unload'
-        );
-    };
-
-    const awarenessUpdateHandler = ({ added, updated, removed }: any) => {
-        const changedClients = added.concat(updated).concat(removed);
-        const encoder = encoding.createEncoder();
-        encoding.writeVarUint(encoder, Message.awareness);
-        encoding.writeVarUint8Array(
-            encoder,
-            awarenessProtocol.encodeAwarenessUpdate(awareness, changedClients)
-        );
-        broadcastMessage(encoding.toUint8Array(encoder));
-    };
-
     //  Listens to Yjs updates and sends them to remote peers (ws and broadcastchannel)
     const documentUpdateHandler = (update: Uint8Array, origin: any) => {
         if (origin !== provider) {
@@ -59,22 +38,8 @@ export const registerUpdateHandler = (
         }
     };
 
-    if (typeof window !== 'undefined') {
-        window.addEventListener('beforeunload', beforeUnloadHandler);
-    } else if (typeof process !== 'undefined') {
-        process.on('exit', beforeUnloadHandler);
-    }
-
-    awareness.on('update', awarenessUpdateHandler);
     doc.on('update', documentUpdateHandler);
     return () => {
-        if (typeof window !== 'undefined') {
-            window.removeEventListener('beforeunload', beforeUnloadHandler);
-        } else if (typeof process !== 'undefined') {
-            process.off('exit', beforeUnloadHandler);
-        }
-
-        awareness.off('update', awarenessUpdateHandler);
         doc.off('update', documentUpdateHandler);
     };
 };

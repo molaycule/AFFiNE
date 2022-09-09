@@ -74,7 +74,6 @@ export const getYjsProviders = (
                         instances.workspace,
                         instances.doc,
                         {
-                            awareness: instances.awareness,
                             params: options.params,
                         }
                     ) as any; // TODO: type is erased after cascading references
